@@ -1,0 +1,30 @@
+<nav>
+  <div class="container">
+    <h1>
+      <a href="/">TickTock</a>
+    </h1>
+
+    <div class="nav-right">
+      <h2 class="navclock" id="navClock"></h2>
+    </div>
+  </div>
+  <div class="container">
+  {% include "includes/logout_button.html" %}
+  {% if current_user.is_authenticated %}
+    <div class="nav-right">
+      <h3>Hello, {{ current_user.username }}</h3>
+    </div>
+  {% else %}
+    <div>
+      <a href="/login" class="button login-button">Login</a>
+    </div>
+    <div>
+      <a href="/signup" class="button button-outline login-button">Sign up</a>
+    </div>
+  {% endif %}
+
+    <div class="nav-right">
+      <a href="/search" class="button">Search</a>
+    </div>
+  </div>
+</nav>

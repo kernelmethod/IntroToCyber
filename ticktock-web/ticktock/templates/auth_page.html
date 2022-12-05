@@ -1,0 +1,30 @@
+{% from "macros/formhelpers.html" import render_field %}
+{% extends "base.html" %}
+
+{% block content %}
+<h2 style="width: 100%;" class="text-center">
+  {% block auth_header %}{% endblock %}
+</h2>
+
+<form action="/{{ action }}" method="POST" class="auth-form">
+  {{ form.csrf_token }}
+  {{ render_field(form.username) }}
+  {{ render_field(form.password) }}
+  <div class="container">
+    <div class="row">
+      <div class="column">
+        <div class="login-button">
+          <input class="button" type="submit" name="submit" value="Submit"/>
+        </div>
+      </div>
+      <div class="column">
+        <div class="login-button">
+          <a href="{{ auth_switch_url }}" class="button button-outline">
+            {% block switch_title %}{% endblock %}
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</form>
+{% endblock %}

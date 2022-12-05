@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    {% block title %}
+    <title>Welcome to TickTock</title>
+    {% endblock %}
+    {% include "includes/head.html" %}
+  </head>
+  <body>
+    <div id="ticktockApp">
+      {% include "includes/navbar.html" %}
+
+      {% block banner_notice %}
+      {% if banner_notice is defined %}
+      <notice level="{{ banner_notice.level.name }}">
+        {{ banner_notice.message }}
+      </notice>
+      {% endif %}
+      {% endblock %}
+
+      {% block content %}
+      {% endblock %}
+    </div>
+  </body>
+  <footer>
+    {% block footer %}
+    {% endblock %}
+  </footer>
+
+  {% block scripts %}
+  {% endblock %}
+</html>

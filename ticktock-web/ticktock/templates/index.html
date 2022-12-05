@@ -1,0 +1,29 @@
+{% extends "postview.html" %}
+{% block viewheader %}
+<div style="text-align: center;">
+  <h1 style="width: 100%; text-align: center;">Welcome to TickTock</h1>
+</div>
+{% endblock %}
+
+{% block posts %}
+{% if current_user.is_authenticated %}
+<form action="/api/posts/create" method="POST">
+  {{ form.csrf_token }}
+  {{ form.content.label }} {{ form.content(placeholder="What's happening?") }}
+  <input class="button" type="submit" value="Submit"/>
+</form>
+{% endif %}
+
+<div v-for="post in posts">
+  <post v-bind:username="post.username" v-bind:content="post.content"
+    v-bind:posted="post.posted" v-bind:post_id="post.post_id" v-bind:uid="post.uid">
+  </post>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script type="module">
+  import { ticktockAppVm } from "/static/js/site.js";
+  ticktockAppVm.get_recent_posts();
+</script>
+{% endblock %}

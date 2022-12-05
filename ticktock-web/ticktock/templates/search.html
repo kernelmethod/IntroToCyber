@@ -1,0 +1,46 @@
+{% from "macros/formhelpers.html" import render_field %}
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container searchbar">
+  <form id="searchbar" action="/search" method="GET">
+    {{ render_field(form.query) }}
+    <input class="button" type="submit" value="Run search"/>
+  </form>
+</div>
+
+<div class="post-view" id="searchResults">
+  <div v-for="post in posts">
+    <post v-bind:username="post.username" v-bind:content="post.content"
+          v-bind:posted="post.posted" v-bind:post_id="post.post_id" v-bind:uid="post.uid">
+  </div>
+  <div v-if="posts !== null && posts.length === 0" style="text-align: center;">
+    <h2>No posts found :(</h2>
+  </div>
+</div>
+{% endblock %}
+
+{% block footer %}
+{% include "includes/return.html" %}
+{% endblock %}
+
+{% block scripts %}
+<script type="module">
+  import { ticktockAppVm } from "/static/js/site.js";
+
+  let url = new URL(document.location);
+  let query = url.searchParams.get("query");
+  if ( query !== null ) {
+    let searchUrl = new URL("/api/search", document.location);
+    searchUrl.searchParams.append("query", query);
+    fetch(searchUrl)
+      .then(data => { return data.json(); })
+      .then(data => {
+        ticktockAppVm.$data.posts = data.results;
+      })
+      .catch(error => { console.log("Error fetching data from search API: " + error) });
+  } else {
+    ticktockAppVm.$data.posts = null;
+  }
+</script>
+{% endblock %}

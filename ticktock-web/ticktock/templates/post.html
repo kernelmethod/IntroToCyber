@@ -1,0 +1,26 @@
+{% extends "postview.html" %}
+{% block viewheader %}
+{% if post_id is not defined %}
+<h1>I couldn't find the post you were looking for :/</h1>
+{% else %}
+<div style="margin-top: 2rem;"></div>
+{% endif %}
+{% endblock %}
+
+{% block posts %}
+{% if post_id is defined %}
+<post post_id="{{ post_id }}"
+  content="{{ content }}"
+  posted="{{ posted }}"
+  uid="{{ uid }}"
+  username="{{ username }}">
+
+{{ content }}
+
+</post>
+{% endif %}
+{% endblock %}
+
+{% block footer %}
+{% include "includes/return.html" %}
+{% endblock %}

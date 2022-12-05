@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+
+{% block content %}
+{% block viewheader %}{% endblock %}
+<div class="post-view">
+  {% block posts %}
+  <div v-for="post in posts">
+    <post v-bind:username="post.username" v-bind:content="post.content"
+      v-bind:posted="post.posted" v-bind:post_id="post.post_id" v-bind:uid="post.uid">
+    </post>
+  </div>
+  {% endblock %}
+</div>
+{% endblock %}

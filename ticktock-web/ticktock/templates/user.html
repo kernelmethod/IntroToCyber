@@ -1,0 +1,24 @@
+{% extends "postview.html" %}
+{% block viewheader %}
+{% if uid is none %}
+<h1>Uh-oh! User not found :-(</h1>
+{% else %}
+<div class="user-header container">
+  <div v-for="user in selected_users">
+    <userheader v-bind:username="user.username" v-bind:uid="user.uid">
+  </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block footer %}
+{% include "includes/return.html" %}
+{% endblock %}
+
+{% block scripts %}
+<script type="module">
+  import { ticktockAppVm } from "/static/js/site.js";
+  ticktockAppVm.get_user_posts({{ uid }});
+  ticktockAppVm.set_selected_user({{ uid }});
+</script>
+{% endblock %}
