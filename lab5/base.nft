@@ -1,0 +1,82 @@
+#!/usr/sbin/nft -f
+
+# Flush old rules from the nat and firewall tables
+table inet nat
+delete table inet nat
+
+table inet firewall
+delete table inet firewall
+
+# Users whose traffic shouldn't automatically get redirected.
+define NO_REDIRECT = { mitmproxy }
+
+# Firewall rules. You should define your custom rules here!
+table inet firewall {
+    # Add two named counters to keep track of the number of dropped input and
+    # output packets.
+    #
+    # Reference: https://wiki.nftables.org/wiki-nftables/index.php/Counters
+    counter input_drop_counter {
+        comment "Number of dropped inbound packets: "
+    }
+
+    counter output_drop_counter {
+        comment "Number of dropped outbound packets: "
+    }
+
+    chain input {
+        type filter hook input priority filter; policy drop;
+
+        # The following rule _must_ appear at the top of this chain! Do not drop
+        # traffic to either of these ports (22 and 3389) unless you'd like to
+        # get locked out of VCR
+        tcp dport {22, 3389} counter accept
+
+        # TODO: your rules here!
+
+        # Count inbound packets before they're dropped
+        counter name input_drop_counter
+    }
+
+    chain output {
+        type filter hook output priority filter; policy drop;
+
+        # Same story as the input chain -- don't delete this rule if you don't
+        # want to get locked out of VCR.
+        tcp sport {22, 3389} counter accept
+
+        # TODO: your rules here!
+
+        # Count outbound packets before they're dropped
+        counter name output_drop_counter
+    }
+}
+
+
+###
+### NAT (Network Address Translation) table
+###
+# The rules in this table automatically redirect traffic going to HTTP(S)
+# servers (on port 80 and 443) to the mitmproxy server.
+
+table inet nat {
+    chain prerouting {
+        type nat hook output priority -100; policy accept;
+
+        # Don't redirect traffic from users in the NO_REDIRECT list
+        #
+        # Reference: https://wiki.nftables.org/wiki-nftables/index.php/Matching_packet_metainformation#Matching_by_socket_UID_.2F_GID
+        skuid != $NO_REDIRECT tcp dport {80, 443} goto proxy
+    }
+
+    chain proxy {
+        counter comment "Number of packets rerouted to the proxy: "
+        limit rate 15/minute log prefix "PROXY_LOG: " flags all
+
+        # Redirect packets that reach this rule to port 8080, where the proxy
+        # server is being hosted
+        #
+        # Reference: https://wiki.nftables.org/wiki-nftables/index.php/Performing_Network_Address_Translation_(NAT)#Redirect
+        ip protocol tcp counter redirect to :8080
+    }
+}

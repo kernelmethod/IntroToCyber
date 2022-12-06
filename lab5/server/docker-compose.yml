@@ -1,0 +1,21 @@
+version: '3'
+services:
+  proxy:
+    image: "caddy:2-alpine"
+    hostname: "proxy.${BASE_DOMAIN:-lab5.lab}"
+    environment:
+      BASE_DOMAIN: "${BASE_DOMAIN:-lab5.lab}"
+    ports:
+      - 80:80
+      - 443:443
+    volumes:
+      - caddy_config:/config:rw
+      - caddy_data:/data:rw
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+    deploy:
+      restart_policy:
+        condition: on-failure
+
+volumes:
+  caddy_config:
+  caddy_data:

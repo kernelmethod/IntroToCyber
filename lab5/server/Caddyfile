@@ -1,0 +1,44 @@
+# The Caddyfile is an easy way to configure your Caddy web server.
+#
+# Unless the file starts with a global options block, the first
+# uncommented line is always the address of your site.
+#
+# To use your own domain name (with automatic HTTPS), first make
+# sure your domain's A/AAAA DNS records are properly pointed to
+# this machine's public IP, then replace ":80" below with your
+# domain name.
+{
+	#auto_https off
+
+	# Use the LetsEncrypt staging environment for development so that we don't
+	# hit rate limits
+	acme_ca https://acme-staging-v02.api.letsencrypt.org/directory
+}
+
+:80, :443, {$BASE_DOMAIN} {
+	log
+	encode zstd gzip
+	# reverse_proxy www.{$BASE_DOMAIN}:5000
+
+	@getindex {
+		method GET
+		path /
+	}
+
+	@postindex {
+		method POST
+		path /
+	}
+
+	respond @getindex "It works!"
+	respond @postindex "Received POST request"
+}
+
+whataweirdsubdomain.{$BASE_DOMAIN} {
+    log
+    encode zstd gzip
+    respond "It works!"
+}
+
+# Refer to the Caddy docs for more information:
+# https://caddyserver.com/docs/caddyfile

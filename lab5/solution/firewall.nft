@@ -1,0 +1,393 @@
+#!/usr/sbin/nft -f
+
+# Flush old rules from the nat and firewall tables
+table inet nat
+delete table inet nat
+
+table inet firewall
+delete table inet firewall
+
+# Users whose traffic shouldn't automatically get redirected.
+define NO_REDIRECT = { mitmproxy }
+
+table inet firewall {
+    # Add two named counters to keep track of the number of dropped input and
+    # output packets.
+    #
+    # Reference: https://wiki.nftables.org/wiki-nftables/index.php/Counters
+    counter input_drop_counter {
+        comment "Number of dropped inbound packets: "
+    }
+
+    counter output_drop_counter {
+        comment "Number of dropped outbound packets: "
+    }
+
+    chain input {
+        type filter hook input priority filter; policy drop;
+
+        # The following rule _must_ appear at the top of this chain! Do not drop
+        # traffic to either of these ports (22 and 3389) unless you'd like to
+        # get locked out of VCR
+        tcp dport {22, 3389} counter accept
+
+        ### START SOLUTION
+
+        # Allow traffic on loopback
+        # 
+        #    Your machine
+        #  eth0 IP: 10.1.2.3                          External machine
+        #    lo IP: 127.0.0.1
+        # 
+        # ┌──────────────────┐                      ┌──────────────────┐
+        # │                  │                      │                  │
+        # │                  │                      │                  │
+        # │                  │ DEST                 │                  │
+        # │                  │  ◄────┐              │                  │
+        # │                  │       │ ip daddr     │                  │
+        # │                  │       │ 127.0.0.1    │                  │
+        # │                  │       │              │                  │
+        # │                  │       │              │                  │
+        # │                  │       │              │                  │
+        # │                  │  ─────┘              │                  │
+        # │                  │ SOURCE               │                  │
+        # │                  │                      │                  │
+        # │                  │                      │                  │
+        # │                  │                      │                  │
+        # └──────────────────┘                      └──────────────────┘
+        # 
+        #
+        #
+        # NOTE: in general, `iif lo counter accept` is slightly preferred.  That
+        # rule specifically requires traffic to be on the loopback interface.
+        # In practice, I don't know if it realistically makes a difference
+        # whether you use `iif lo accept` vs specifying the destination address
+        # range, as shown below.
+        #
+        # If you do specify the destination IP address range, it is
+        # *technically*, *very slightly* more correct to specify the destination
+        # IPs as the IP range 127.0.0.0/8 instead of as 127.0.0.1. That's
+        # because The former complies better with IETF RFC 3330. In theory, it's
+        # valid for a machine to use any IP address in 127.0.0.0/8 to
+        # communication with itself on loopback.
+        #
+        # In practice (and certainly for grading purposes), it's almost always
+        # fine to do `127.0.0.1` rather than `127.0.0.0/8`
+
+        ip saddr 127.0.0.0/8 counter accept
+
+        # Allow inbound traffic to the proxy
+        #
+        #    Your machine
+        #  eth0 IP: 10.1.2.3                          External machine
+        #    lo IP: 127.0.0.1
+        # 
+        # ┌──────────────────┐                      ┌──────────────────┐
+        # │                  │                      │                  │
+        # │                  │            (see note)│                  │
+        # │                  │ DEST          SOURCE │                  │
+        # │    dport 8080    │  ◄────┐--------------│                  │
+        # │     (Proxy)      │       │              │                  │
+        # │                  │       │ tcp dport    │                  │
+        # │                  │       │ 8080         │                  │
+        # │                  │       │              │                  │
+        # │                  │       │              │                  │
+        # │                  │  ─────┘              │                  │
+        # │                  │ SOURCE               │                  │
+        # │                  │                      │                  │
+        # │                  │                      │                  │
+        # │                  │                      │                  │
+        # └──────────────────┘                      └──────────────────┘
+        #
+        # NOTE: ideally, other machines shouldn't be able to talk to the proxy.
+        # The rule I have listed below (which is fine for grading purposes)
+        # violates that principle. Nothing about the rule ensures that the only
+        # machine that can send traffic to port 8080 is your own.
+        #
+        # There are two ways to fix that. One way to do that would be to ensure
+        # that the source IP address is your machine. So e.g., if your machine
+        # is at 10.1.2.3, you would do
+        #
+        #   ip saddr 10.1.2.3 tcp dport 8080 counter accept
+        #
+        # There is another way involving specifying the *destination address*
+        # which I will not show. The reason that rule works is honestly really
+        # complicated. You may have been able to figure it out looking at the
+        # journalctl logs.
+        #
+        # Aside: this is all rather complex and there are some really
+        # interesting technicalities that can arise. Suffice it to say that
+        # firewall configuration can be a tricky topic. That said, configuring a
+        # firewall for a forward proxy is, in retrospect, really a much more
+        # complex operation than I had intended for an nftables introduction.
+        # Mea culpa.
+
+        tcp dport 8080 counter accept
+
+        # Allow inbound responses to DNS queries
+        # 
+        #    Your machine
+        #  eth0 IP: 10.1.2.3                          External machine
+        #    lo IP: 127.0.0.1
+        # 
+        # ┌──────────────────┐                      ┌──────────────────┐
+        # │                  │                      │                  │
+        # │                  │                      │                  │
+        # │                  │ DEST          SOURCE │                  │
+        # │                  │  ◄────────────────   │ sport 53 (DNS)   │
+        # │                  │     udp sport 53     │                  │
+        # │                  │                      │                  │
+        # │                  │                      │                  │
+        # │                  │                      │                  │
+        # │                  │                      │                  │
+        # │                  │                      │                  │
+        # │                  │                      │                  │
+        # │                  │                      │                  │
+        # │                  │                      │                  │
+        # │                  │                      │                  │
+        # └──────────────────┘                      └──────────────────┘
+        # 
+
+        udp sport 53 counter accept
+
+        # Allow all related + established connections
+        # 
+        #    Your machine
+        #  eth0 IP: 10.1.2.3                          External machine
+        #    lo IP: 127.0.0.1
+        # 
+        # ┌──────────────────┐                      ┌──────────────────┐
+        # │                  │                      │                  │
+        # │                  │  -----------------►  │                  │
+        # │                  │   (initiates conn.)  │                  │
+        # │                  │                      │                  │
+        # │                  │                      │                  │
+        # │                  │ DEST          SOURCE │                  │
+        # │                  │  ◄────────────────   │                  │
+        # │                  │    ct state          │                  │
+        # │                  │ {related,            │                  │
+        # │                  │    established}      │                  │
+        # │                  │                      │                  │
+        # │                  │                      │                  │
+        # │                  │                      │                  │
+        # │                  │                      │                  │
+        # └──────────────────┘                      └──────────────────┘
+        # 
+        # This is one that we talked about in class. What this rule does is
+        # ensure that once a connection is allowed to initiate between this
+        # machine and another machine, all following packets in that connection
+        # are accepted.
+        #
+        # Materially, this allows you to receive a response to a connection.
+        # That is, if you start a connection, the firewall will accept packets
+        # you receive in response to you.
+
+        ct state {established, related} accept
+
+        # Rate limit is unnecessary but may help for your machine's performance
+
+        limit rate 1/second log prefix "input.drop " flags all
+        ### END SOLUTION
+
+        # Count inbound packets before they're dropped
+        counter name input_drop_counter
+    }
+
+    chain output {
+        type filter hook output priority filter; policy drop;
+
+        # Same story as the input chain -- don't delete this rule if you don't
+        # want to get locked out of VCR.
+        tcp sport {22, 3389} counter accept
+
+        # Allow all traffic to the proxy
+        ### START SOLUTION
+        # Allow traffic on loopback
+        # 
+        #    Your machine
+        #  eth0 IP: 10.1.2.3                          External machine
+        #    lo IP: 127.0.0.1
+        # 
+        # ┌──────────────────┐                      ┌──────────────────┐
+        # │                  │                      │                  │
+        # │                  │                      │                  │
+        # │                  │ SOURCE               │                  │
+        # │                  │  ─────┐              │                  │
+        # │                  │       │ ip daddr     │                  │
+        # │                  │       │ 127.0.0.1    │                  │
+        # │                  │       │              │                  │
+        # │                  │       │              │                  │
+        # │                  │       │              │                  │
+        # │                  │  ◄────┘              │                  │
+        # │                  │ DEST                 │                  │
+        # │                  │                      │                  │
+        # │                  │                      │                  │
+        # │                  │                      │                  │
+        # └──────────────────┘                      └──────────────────┘
+        # 
+        #
+        # NOTE: see corresponding note about loopback traffic in the input
+        # chain.  The correct formulation of the interface-based rule for this
+        # chain would be
+        #
+        #   oif lo counter accept
+        #
+
+        ip daddr 127.0.0.0/8 counter accept
+
+        # Allow traffic to port 8080 (running the proxy)
+        #
+        #    Your machine
+        #  eth0 IP: 10.1.2.3                          External machine
+        #    lo IP: 127.0.0.1
+        # 
+        # ┌──────────────────┐                      ┌──────────────────┐
+        # │                  │                      │                  │
+        # │                  │                      │                  │
+        # │                  │ SOURCE               │                  │
+        # │                  │  ─────┐              │                  │
+        # │                  │       │ ip daddr     │                  │
+        # │                  │       │ 127.0.0.1    │                  │
+        # │                  │       │ tcp dport    │                  │
+        # │                  │       │ 8080         │                  │
+        # │                  │       │              │                  │
+        # │       dport 8080 │  ◄────┘              │                  │
+        # │        (proxy)   │ DEST                 │                  │
+        # │                  │                      │                  │
+        # │                  │                      │                  │
+        # │                  │                      │                  │
+        # └──────────────────┘                      └──────────────────┘
+        #
+        # NOTE: this rule is redundant. If your rule for allowing outbound loopback
+        # traffic is `ip daddr ...` like the previous rule, then this rule does
+        # nothing that wouldn't already be accepted.
+        #
+        # However, when your machine send HTTP traffic, it *does not* send that
+        # traffic over loopback (which would imply sending the HTTP traffic from
+        # your machine back to itself). It gets sent on your other network
+        # interface (called eth0) in VCR. Therefore, this rule is necessary if
+        # you used the `oif lo accept` formulation.
+        #
+        # As I mentioned for the corresponding rule in the input chain, this
+        # technical detail is a little more complex than I'd intended.
+
+        ip daddr 127.0.0.0/8 tcp dport 8080 counter accept
+
+        # Allow the proxy user to send arbitrary outbound traffic
+        # 
+        #    Your machine
+        #  eth0 IP: 10.1.2.3                          External machine
+        #    lo IP: 127.0.0.1
+        # 
+        # ┌──────────────────┐                      ┌──────────────────┐
+        # │                  │                      │                  │
+        # │                  │                      │                  │
+        # │      mitmproxy   │ SOURCE         DEST  │                  │
+        # │    (proxy user)  │  ─────────────────►  │                  │
+        # │                  │         accept       │                  │
+        # │                  │                      │                  │
+        # │                  │                      │                  │
+        # │                  │                      │                  │
+        # │                  │                      │                  │
+        # │                  │                      │                  │
+        # │                  │                      │                  │
+        # │                  │                      │                  │
+        # │                  │                      │                  │
+        # │                  │                      │                  │
+        # └──────────────────┘                      └──────────────────┘
+        # 
+
+        skuid mitmproxy counter accept
+
+        # Allow related and established outbound traffic.
+        # 
+        #    Your machine
+        #  eth0 IP: 10.1.2.3                          External machine
+        #    lo IP: 127.0.0.1
+        # 
+        # ┌──────────────────┐                      ┌──────────────────┐
+        # │                  │                      │                  │
+        # │                  │                      │                  │
+        # │      mitmproxy   │ SOURCE         DEST  │                  │
+        # │    (proxy user)  │  -----------------►  │                  │
+        # │                  │   | initiates conn.  │                  │
+        # │                  │   |                  │                  │
+        # │                  │   |                  │                  │
+        # │                  │   +------X           │                  │
+        # │                  │  (mitmproxy user     │                  │
+        # │                  │    closes socket...) │                  │
+        # │                  │                      │                  │
+        # │                  │  ─────────────────►  │                  │
+        # │                  │        accept        │                  │
+        # │                  │                      │                  │
+        # └──────────────────┘                      └──────────────────┘
+        #
+        # NOTES: this rule isn't strictly necessary. I've added it because after
+        # the mitmproxy user closes a socket it was using to communicate, the
+        # kernel will want to send a final packet telling the other machine to
+        # close the connection. Unforunately, the only way to allow that traffic
+        # is with this rule.
+        #
+        # You can omit this rule and everything will appear normal -- it's a
+        # little nitpick from the kernel's perspective. You'll see some extra
+        # packets dropped by the firewall, but it's unlikely to have a
+        # noticeable effect on your system.
+
+        ct state {established, related} accept
+
+        # Allow outbound DNS queries
+        # 
+        #    Your machine
+        #  eth0 IP: 10.1.2.3                          External machine
+        #    lo IP: 127.0.0.1
+        # 
+        # ┌──────────────────┐                      ┌──────────────────┐
+        # │                  │                      │                  │
+        # │                  │                      │                  │
+        # │                  │ SOURCE         DEST  │ dport 53         │
+        # │                  │  ─────────────────►  │  (DNS)           │
+        # │                  │         accept       │                  │
+        # │                  │                      │                  │
+        # │                  │                      │                  │
+        # │                  │                      │                  │
+        # │                  │                      │                  │
+        # │                  │                      │                  │
+        # │                  │                      │                  │
+        # │                  │                      │                  │
+        # │                  │                      │                  │
+        # │                  │                      │                  │
+        # └──────────────────┘                      └──────────────────┘
+        # 
+
+        udp dport 53 counter accept
+
+        # Rate limit is unnecessary but may help for your machine's performance
+
+        limit rate 5/second log prefix "output.drop " flags all
+        ### END SOLUTION
+
+        # Count outbound packets before they're dropped
+        counter name output_drop_counter
+    }
+}
+
+
+###
+### NAT (Network Address Translation) table
+###
+# The rules in this table automatically redirect traffic going to HTTP(S)
+# servers (on port 80 and 443) to the mitmproxy server.
+
+table inet nat {
+    chain prerouting {
+        type nat hook output priority -100; policy accept;
+        skuid != $NO_REDIRECT tcp dport {80, 443} counter goto proxy
+    }
+
+    chain proxy {
+        limit rate 15/minute counter log prefix "PROXY_LOG: " flags all
+        ip protocol tcp counter redirect to :8080
+    }
+}
+
+

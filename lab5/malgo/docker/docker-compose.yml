@@ -1,0 +1,14 @@
+version: '3'
+services:
+  builder:
+    image: mal-build
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+      args:
+        SRC_DIR: /go/src/mal
+    volumes:
+      - ..:/go/src/mal:ro
+    environment:
+      VERSION: "0.1"
+      BASE_DOMAIN: "${BASE_DOMAIN:-localhost}"
