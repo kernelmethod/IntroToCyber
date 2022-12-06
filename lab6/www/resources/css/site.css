@@ -1,0 +1,59 @@
+em {
+    font-weight: bold;
+    font-style: italic;
+}
+
+.theme-selector {
+    margin-left: auto;
+    margin-right: 0;
+    text-align: right;
+}
+
+/* Utility classes */
+
+.container {
+    display: flex;
+    flex-direction: row;
+}
+
+.container-align {
+    align-items: center;
+}
+
+.col {
+    flex: 1;
+    padding-left: 0.5em;
+    padding-right: 0.5em;
+}
+
+.brand {
+    color: inherit;
+    text-decoration: none;
+    min-width: 30vw;
+}
+
+.brand:visited {
+    color: inherit;
+}
+
+/* Text styling */
+.text-italic {
+    font-style: italic;
+}
+
+.text-center {
+    text-align: center;
+}
+
+.page-title {
+    width: 100%;
+    text-align: center;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+}
+
+.render-results {
+    opacity: 0.8;
+}

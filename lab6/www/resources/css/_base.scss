@@ -1,0 +1,127 @@
+body {
+    font-family: $fonts;
+    background-color: $background-color;
+    color: $line-color;
+    max-width: $max-document-width;
+    padding: 10px;
+    margin: auto;
+    font-size: $font-size;
+}
+
+main {
+    margin: auto;
+    min-height: 60vh;
+    max-width: calc(max(80%, 0.8 * $max-document-width));
+}
+
+section {
+    padding: 1em;
+    margin: 1em;
+}
+
+nav {
+    border-bottom: 2px solid $line-color;
+    padding-top: 1em;
+    padding-bottom: 1em;
+    margin-bottom: 1em;
+}
+
+footer {
+    margin-top: 2em;
+    padding-top: 2em;
+    border-top: 2px solid $line-color;
+}
+
+figure {
+    max-width: calc(max(70%, 600px));
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    margin-left: auto;
+    margin-right: auto;
+    margin-top: 2em;
+    margin-bottom: 2em;
+}
+
+figure img {
+    max-width: 100%;
+    text-align: center;
+    margin: auto;
+}
+
+figure figcaption {
+    padding: 0.5em;
+    text-align: center;
+    font-style: italic;
+    margin: auto;
+}
+
+@media only screen and (min-device-width: 720px) {
+    figure figcaption {
+        max-width: 80%;
+    }
+}
+
+.theme-selector-menu {
+    border-radius: 5px;
+    border: 2px solid $line-color-light;
+}
+
+.card {
+    border-radius: 5px;
+    padding: 1em;
+    margin: 1em;
+    border: 2px solid $line-color-light;
+}
+
+.card-primary {
+    background-color: $color-primary;
+    border: 2px solid $color-primary-dark;
+}
+
+.container .card {
+    align-items: center;
+}
+
+.card-img {
+    margin: auto;
+    text-align: center;
+}
+
+.separator {
+    margin-top: 1em;
+    margin-bottom: 1em;
+    height: 0px;
+    width: 100%;
+    border-top: 2px dashed $line-color-light;
+}
+
+.portrait {
+    border-radius: 100%;
+}
+
+/* Link styling */
+a {
+    color: $link-color;
+}
+
+a:visited {
+    color: $link-color-visited;
+}
+
+.text-light {
+    color: $line-color-light;
+}
+
+/* Override PureCSS styling */
+.pure-menu-active > .pure-menu-link, .pure-menu-link:focus {
+    background-color: $background-color-light;
+}
+
+.pure-menu-link:hover {
+    background-color: $background-color-dark;
+}
+
+.pure-menu-children {
+    background-color: $background-color-light;
+}

@@ -1,0 +1,21 @@
+version: '3.8'
+services:
+
+  webserver:
+    image: '${DOCKER_REPO}/lab6-webhosting:latest'
+    hostname: www.tws.lab
+    build: ./lab6
+    security_opt:
+      - apparmor=sandbox-init
+    ports:
+      - 80:80
+    restart: on-failure
+
+  httpd:
+    image: '${DOCKER_REPO}/cve-2021-42013-httpd:latest'
+    build: ./CVE-2021-42013-httpd
+    ports:
+      - 10000:80
+    security_opt:
+      - apparmor=vuln-httpd-sandbox
+    restart: on-failure

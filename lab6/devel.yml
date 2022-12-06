@@ -1,0 +1,24 @@
+# Override file for developing the webserver
+
+services:
+  webserver:
+    ports:
+      - 5173:5173
+    environment:
+      VITE_DEV: 1
+    volumes:
+      - vite-build:/var/www/public/build
+      - storage:/var/www/storage
+      - ./apache2.conf:/etc/apache2/apache2.conf:ro
+      - ./sites-enabled:/etc/apache2/sites-enabled:ro
+      - ./www/app:/var/www/app:ro
+      - ./www/config:/var/www/config:ro
+      - ./www/resources:/var/www/resources:ro
+      - ./www/routes:/var/www/routes:ro
+      - ./www/public/sites:/var/www/public/sites:ro
+      - ./www/tests:/var/www/tests:ro
+      - ./www/vite.config.js:/var/www/vite.config.js:ro
+
+volumes:
+  vite-build:
+  storage:
