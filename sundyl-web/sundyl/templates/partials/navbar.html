@@ -1,0 +1,52 @@
+<nav>
+  <div class="navbar-row">
+    {% include "partials/logo.html" %}
+  </div>
+
+  <div class="navbar-row">
+    <div class="col">
+      {% if user.is_authenticated %}
+      <span>Logged in as <b>{{ user.username }}</b>
+      {% endif %}
+    </div>
+
+    <div class="navbar-right">
+      {% if user.is_authenticated %}
+      <div>
+        <a href="{% url 'search' %}" class="button button-outline">
+          Search
+        </a>
+      </div>
+
+      <div>
+        <a href="{% url 'profile' user.id %}" class="button button-outline">
+          Profile
+        </a>
+      </div>
+
+      <div>
+        {% comment %}
+        <form action="{% url 'logout' %}" method="POST">
+          {% csrf_token %}
+          <input type="submit" class="button" value="Logout">
+        </form>
+        {% endcomment %}
+        {# NOTE: logout button intentionally vulnerable to CSRF #}
+        <a href="{% url 'logout' %}" class="button">
+          Logout
+        </a>
+      </div>
+      {% else %}
+      <div>
+        <a href="{% url 'login' %}">
+          <div class="button">
+            Login
+          </div>
+        </a>
+      </div>
+      {% endif %}
+      </div>
+    </div>
+
+  </div>
+</nav>

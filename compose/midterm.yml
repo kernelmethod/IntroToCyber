@@ -1,0 +1,225 @@
+# Version number must be manually specified as 3.8 for Docker Swarm:
+#
+# https://github.com/moby/moby/issues/31101
+version: '3.8'
+
+#################################################################################
+#
+# Additional services
+#
+#
+
+x-lab-networks: &lab-networks
+  networks:
+    &lab-network-names
+    default:
+
+x-lab-common: &lab-common
+  environment: &lab-common-env
+    BASE_DOMAIN: '${SUNDYL_BASE_DOMAIN}'
+
+x-bucket-config: &bucket-config
+  environment: &bucket-common-env
+    WEB_STATIC_BUCKET: 'www'
+    WEB_MEDIA_BUCKET: 'www-media'
+
+x-minio-config: &minio-config
+  secrets: &minio-common-secrets
+    - MINIO_ROOT_PASSWORD
+
+  environment: &minio-common-env
+    <<: *bucket-common-env
+    MINIO_ROOT_USER: 'minio'
+    MINIO_ROOT_PASSWORD_FILE: '/run/secrets/MINIO_ROOT_PASSWORD'
+    MINIO_SERVER_URL: 'http://cdn.${SUNDYL_BASE_DOMAIN}:9000'
+    MINIO_REDIRECT_URL: 'http://minio.console.${SUNDYL_BASE_DOMAIN}'
+
+networks:
+  <<: *lab-network-names
+
+secrets:
+  POSTGRES_PASSWORD:
+    file: ./secrets/pass/POSTGRES_PASSWORD
+  POSTGRES_WEB_PASSWORD:
+    file: ./secrets/pass/POSTGRES_WEB_PASSWORD
+  MINIO_ROOT_PASSWORD:
+    file: ./secrets/pass/MINIO_ROOT_PASSWORD
+  STAFF_PASSWORD:
+    file: ./secrets/pass/STAFF_PASSWORD
+  # Secrets for flags
+  FLAG_SQLI:
+    file: ./secrets/flags/SQLI
+  FLAG_CSRF:
+    file: ./secrets/flags/CSRF
+  FLAG_USERS:
+    file: ./secrets/flags/USERS
+  FLAG_RCE:
+    file: ./secrets/flags/RCE
+  FLAG_XSS:
+    file: ./secrets/flags/XSS
+  FLAG_WILDCARD_SUBDOMAIN:
+    file: ./secrets/flags/WILDCARD_SUBDOMAIN
+  FLAG_WILDCARD_PAGE_ENUMERATION:
+    file: ./secrets/flags/WILDCARD_PAGE_ENUMERATION
+  FLAG_WILDCARD_PORT_ENUMERATION:
+    file: ./secrets/flags/WILDCARD_PORT_ENUMERATION
+  FLAG_WILDCARD_SOURCE_CONTROL:
+    file: ./secrets/flags/WILDCARD_SOURCE_CONTROL
+  # Miscellaneous secrets
+  SECRET_SUBDOMAIN:
+    file: ./secrets/misc/SECRET_SUBDOMAIN
+  SECRET_PAGE:
+    file: ./secrets/misc/SECRET_PAGE
+
+
+services:
+
+  bugtracker:
+    <<: *lab-networks
+    image: '${DOCKER_REPO}/sundyl-bugtracker:latest'
+    secrets:
+      - FLAG_WILDCARD_SOURCE_CONTROL
+    build:
+      context: ./sundyl-fossil
+    hostname: 'bugs.${SUNDYL_BASE_DOMAIN}'
+    ports:
+      - 5000:8080
+
+  proxy:
+    image: '${DOCKER_REPO}/sundyl-proxy:latest'
+    secrets:
+      - SECRET_SUBDOMAIN
+      - FLAG_WILDCARD_PORT_ENUMERATION
+      - FLAG_WILDCARD_SUBDOMAIN
+    build:
+      context: ./sundyl-proxy
+    environment:
+      <<: *lab-common-env
+      <<: *bucket-common-env
+    networks:
+      default:
+        # In order for other containers to be able to communicate with www-media.cdn.sundyl.lab and
+        # www.cdn.sundyl.lab, these hostnames need to be aliased to the proxy so that their routes
+        # get rewritten correctly.
+        aliases:
+          - www.cdn.sundyl.lab
+          - www-media.cdn.sundyl.lab
+    volumes:
+      - caddy_config:/config
+      - caddy_data:/data
+      - cronreports:/reports:ro
+    ports:
+      - 80:80
+      - 57230:57230
+
+  dns:
+    <<: *lab-networks
+    image: '${DOCKER_REPO}/sundyl-dns:latest'
+    build: ./sundyl-dns
+    hostname: 'ns1.${SUNDYL_BASE_DOMAIN}'
+    environment:
+      IPV4_ADDR: '${IPV4_ADDR:-127.0.0.1}'
+      SUNDYL_BASE_DOMAIN: '${SUNDYL_BASE_DOMAIN}'
+    ports:
+      - target: 53
+        published: 53
+      - target: 53
+        published: 53
+        protocol: udp
+
+  webserver:
+    <<: *lab-networks
+    image: '${DOCKER_REPO}/sundyl-web:latest'
+    secrets:
+      - POSTGRES_WEB_PASSWORD
+      - FLAG_SQLI
+      - FLAG_CSRF
+      - FLAG_USERS
+      - FLAG_WILDCARD_PAGE_ENUMERATION
+      - FLAG_XSS
+      - SECRET_PAGE
+      - MINIO_ROOT_PASSWORD
+      - STAFF_PASSWORD
+    environment:
+      <<: *minio-common-env
+      SUNDYL_BASE_DOMAIN: '${SUNDYL_BASE_DOMAIN}'
+      GUNICORN_RELOAD: 0
+      POSTGRES_USER: 'admin'
+      POSTGRES_PASSWORD_FILE: /run/secrets/POSTGRES_WEB_PASSWORD
+    build: ./sundyl-web
+    hostname: 'www.${SUNDYL_BASE_DOMAIN}'
+    restart: always
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+
+  postgres:
+    image: '${DOCKER_REPO}/sundyl-postgres:latest'
+    hostname: 'db.${SUNDYL_BASE_DOMAIN}'
+    build: ./sundyl-database
+    secrets:
+      - POSTGRES_PASSWORD
+      - POSTGRES_WEB_PASSWORD
+    networks:
+      <<: *lab-network-names
+    environment:
+      POSTGRES_USER: pgadmin
+      POSTGRES_WEB_PASSWORD_FILE: /run/secrets/POSTGRES_WEB_PASSWORD
+      POSTGRES_PASSWORD_FILE: /run/secrets/POSTGRES_PASSWORD
+      POSTGRES_DB: pgdb
+    ports:
+      - '5432:5432'
+    volumes:
+      - postgres-db-volume:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD', 'pg_isready', '-U', 'admin']
+      interval: 5s
+      retries: 5
+
+  minio:
+    <<: *lab-networks
+    <<: *minio-config
+    image: '${DOCKER_REPO}/sundyl-minio:latest'
+    build: ./sundyl-minio
+    hostname: 'cdn.${SUNDYL_BASE_DOMAIN}'
+    ports:
+      - '9000:9000'
+      - '9001:9001'
+    volumes:
+      - s3store:/data
+    command: server /data --console-address ':9001'
+
+  mc:
+    <<: *lab-networks
+    hostname: 'reports.${SUNDYL_BASE_DOMAIN}'
+    image: '${DOCKER_REPO}/sundyl-mc:latest'
+    build: './sundyl-mc'
+    secrets:
+      - MINIO_ROOT_PASSWORD
+      - FLAG_RCE
+    environment:
+      <<: *minio-common-env
+      <<: *lab-common-env
+    restart: on-failure
+    volumes:
+      - cronreports:/reports
+    deploy:
+      restart_policy:
+        condition: on-failure
+
+  support:
+    <<: *lab-networks
+    hostname: 'support.${SUNDYL_BASE_DOMAIN}'
+    image: '${DOCKER_REPO}/sundyl-support:latest'
+    build:
+      context: ./sundyl-support
+    secrets:
+      - STAFF_PASSWORD
+
+volumes:
+  caddy_config:
+  caddy_data:
+  postgres-db-volume:
+  s3store:
+  cronreports:

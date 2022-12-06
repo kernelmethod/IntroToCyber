@@ -1,0 +1,29 @@
+;
+; BIND data file for BASE_DOMAIN
+;
+$TTL    3h
+@       IN      SOA     ns1.BASE_DOMAIN. admin.BASE_DOMAIN. (
+                          1        ; Serial
+                          3h       ; Refresh after 3 hours
+                          1h       ; Retry after 1 hour
+                          1w       ; Expire after 1 week
+                          1h )     ; Negative caching TTL of 1 day
+;
+@       IN      NS      ns1.BASE_DOMAIN.
+@       IN      NS      ns2.BASE_DOMAIN.
+
+
+BASE_DOMAIN.            IN      A       IPV4_ADDR
+ns1                     IN      A       IPV4_ADDR
+ns1                     IN      A       IPV4_ADDR
+ns2                     IN      A       IPV4_ADDR
+cdn                     IN      A       IPV4_ADDR
+ftp                     IN      A       IPV4_ADDR
+www                     IN      CNAME   BASE_DOMAIN.
+bugs                    IN      A       IPV4_ADDR
+airflow                 IN      A       IPV4_ADDR
+reports                 IN      A       IPV4_ADDR
+admin                   IN      A       IPV4_ADDR
+console.minio           IN      A       IPV4_ADDR
+
+*.cdn.BASE_DOMAIN.      IN      A       IPV4_ADDR

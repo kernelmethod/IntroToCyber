@@ -1,0 +1,15 @@
+{# Reusable tag for showing a short description of a user #}
+
+<div class="profile-short">
+  <div class="portrait">
+    <img src="{{ profile.avatar.url }}">
+  </div>
+  <div>
+    <a href="{% url 'profile' profile.user.id %}">
+    <span class="username">
+      <i>{{ profile.user.username }}</i>
+    </span>
+    </a>
+  </div>
+</div>
+

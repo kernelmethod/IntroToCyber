@@ -1,0 +1,105 @@
+{% extends 'base.html' %}
+
+{% block title %}Sundyl - User {{ profile.user.username }}{% endblock %}
+
+{% block content %}
+{% if user.is_authenticated %}
+{% if user.id == profile.user.id %}
+<p>
+  <b>You are currently looking at your own profile.</b>
+</p>
+<p>
+  <a href="{% url 'edit_profile' %}" class="button">
+    Edit profile
+  </a>
+</p>
+{% if profile.successful_csrf %}
+<p class="alert">
+  <b>CSRF successful!</b> Flag:
+  <span class="flag">{{ csrf_flag }}</span>
+</p>
+{% endif %}
+{% if profile.successful_xss %}
+<p class="alert">
+  <b>XSS successful!</b> Flag:
+  <span class="flag">{{ xss_flag }}</span>
+</p>
+{% endif %}
+{% endif %}
+{% endif %}
+
+<div class="profile-head">
+  <div class="portrait">
+   <img src="{{ profile.avatar.url }}">
+  </div>
+  <h1>{{ profile.user.username }}</h1>
+  <h2>
+    <a href="{% url 'followers' profile.user.id %}">Followers: {{ profile.num_followers }}</a>
+  </h2>
+  {% if profile.user.is_staff %}
+  <div class="text-center">
+    <b>This user is a member of the Sundyl staff</b>
+  </div>
+  {% endif %}
+</div>
+
+<article>
+  {% if user.is_authenticated %}
+  {% if user.id != profile.user.id %}
+  <div class="text-center">
+    {# Provide option to follow/unfollow user #}
+    <form method="POST" action="{% url 'follow' profile.user.id %}">
+      {% csrf_token %}
+      {% if is_following %}
+      <input class="button" type="submit" value="Unfollow user" id="unfollowButton">
+      {% else %}
+      <input class="button" type="submit" value="Follow user" id="followButton">
+      {% endif %}
+    </form>
+  </div>
+
+  {% endif %}
+  {% endif %}
+
+  {% block profile_content %}
+  <p>
+    <b>Bio:</b>
+    {% if profile.description|length > 0 %}
+
+    {# NOTE: intentionally vulnerable to XSS! #}
+    {{ profile.description|safe }}
+
+    {% else %}
+    <i>(empty)</i>
+    {% endif %}
+  </p>
+
+  <p>
+    <b>Files:</b> this user has made the following files public:
+  </p>
+
+  {% if uploaded_files|length > 0 %}
+  <ul>
+  {% for file in uploaded_files %}
+    <li>
+      <a href="{{ file.upload.url }}">{{ file.upload.url }}</a>
+    </li>
+  {% endfor %}
+  </ul>
+  {% else %}
+  <p>
+    <i>this user has not uploaded any public files</i>
+  </p>
+  {% endif %}
+
+  <p>
+    {% if user.id == profile.user.id %}
+    <a href="{% url 'upload_file' %}" class="button">
+      Upload files
+    </a>
+    {% endif %}
+  </p>
+  {% endblock %}
+</article>
+
+{% endblock %}

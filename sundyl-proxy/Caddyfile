@@ -1,0 +1,97 @@
+# The Caddyfile is an easy way to configure your Caddy web server.
+#
+# Unless the file starts with a global options block, the first
+# uncommented line is always the address of your site.
+#
+# To use your own domain name (with automatic HTTPS), first make
+# sure your domain's A/AAAA DNS records are properly pointed to
+# this machine's public IP, then replace ":80" below with your
+# domain name.
+
+# Global options
+{
+	auto_https off
+}
+
+# Apache Airflow
+airflow.{$BASE_DOMAIN}:80 {
+	log
+	reverse_proxy airflow.{$BASE_DOMAIN}:8080
+}
+
+(handle_server_errors) {
+	handle_errors {
+		@502 expression `{err.status_code} == 502`
+		handle @502 {
+			file_server
+		}
+	}
+}
+
+# MinIO
+cdn.{$BASE_DOMAIN}:80, *.cdn.{$BASE_DOMAIN}:80 {
+	# Reroute to bucket corresponding to subdomain
+	#
+	# This assumes that BASE_DOMAIN = [domain].[tld]
+	rewrite * /{labels.3}/{path}
+	reverse_proxy cdn.{$BASE_DOMAIN}:9000
+}
+
+console.minio.{$BASE_DOMAIN}:80 {
+	log
+	reverse_proxy cdn.{$BASE_DOMAIN}:9001
+}
+
+# Django / Gunicorn webserver
+www.{$BASE_DOMAIN}:80 {
+	log
+
+	handle {
+		reverse_proxy www.{$BASE_DOMAIN}:80
+	}
+}
+
+# Issue tracker (Fossil + lighttpd)
+bugs.{$BASE_DOMAIN}:80 {
+	log
+	reverse_proxy bugs.{$BASE_DOMAIN}:8080
+}
+
+# Show the MinIO file reports
+reports.{$BASE_DOMAIN}:80 {
+    root * /reports
+    file_server
+    encode gzip
+
+    redir / /report.txt
+    try_files {path} /=404
+}
+
+# Run a server on a secret subdomain for the subdomain wildcard flag
+{$SECRET_SUBDOMAIN}.{$BASE_DOMAIN}:80 {
+    log
+    respond "Flag: {$FLAG_WILDCARD_SUBDOMAIN}
+"
+}
+
+# Run a server on a secret port for the port wildcard flag
+:{$SECRET_PORT} {
+    log
+    respond "Flag: {$FLAG_WILDCARD_PORT_ENUMERATION}
+"
+}
+
+# Default server that responds with 404 errors
+:80 {
+    log
+	root * /usr/share/caddy
+	file_server
+	templates
+	encode gzip
+
+	respond * 404
+	try_files {path} {path}.html
+}
+
+# Refer to the Caddy docs for more information:
+# https://caddyserver.com/docs/caddyfile

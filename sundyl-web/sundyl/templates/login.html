@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+
+{% block title %}
+Sundyl - Login
+{% endblock %}
+
+{% block content %}
+<h2>Log in to Sundyl</h2>
+
+{% if next %}
+  {% if user.is_authenticated %}
+  <p>Your account doesn't have access to this page. To proceed,
+  please login with an account that has access.</p>
+  {% else %}
+  <p>Please login to see this page.</p>
+  {% endif %}
+{% endif %}
+
+<div style="display: flex; flex-direction: column; justify-content: center;">
+  {% if form.errors %}
+  <div class="field-errors">
+    <b>Login failed:</b> invalid username/password
+  </div>
+  {% endif %}
+
+  <form method="POST" style="margin: auto;" class="auth-form">
+    {% csrf_token %}
+    {% for field in form %}
+    <div>
+      {{ field.label_tag }} {{ field }}
+      {% if field.errors %}
+      <div class="field-errors">
+        <b>Errors:</b>
+        {{ field.errors }}
+      </div>
+      {% endif %}
+      {% if field.help_text %}
+      <p class="help">
+        {{ field.help_text|safe }}
+      </p>
+      {% endif %}
+    </div>
+    {% endfor %}
+    <input class="button" type="submit" value="Submit" id="id_submit">
+  </form>
+</div>
+
+<div>
+  <h3>
+    <a href="{% url 'signup' %}">
+      > Go to signup
+    </a>
+  </h3>
+</div>
+{% endblock %}

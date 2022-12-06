@@ -1,0 +1,19 @@
+{# Default template for forms used by the webapp #}
+
+{% csrf_token %}
+{% for field in form %}
+<div>
+  {{ field.label_tag }} {{ field }}
+  {% if field.errors %}
+  <div class="field-errors">
+    <b>Errors:</b>
+    {{ field.errors }}
+  </div>
+  {% endif %}
+  {% if field.help_text %}
+  <p class="help">
+    {{ field.help_text|safe }}
+  </p>
+  {% endif %}
+</div>
+{% endfor %}

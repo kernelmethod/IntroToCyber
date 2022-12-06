@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+
+{% block title %}
+Sundyl - Sign up
+{% endblock %}
+
+{% block content %}
+<h2>Welcome to Sundyl!</h2>
+<p>
+  You can use the following form to sign up for an account.
+</p>
+
+<div style="display: flex; flex-direction: column; justify-content: center;">
+  {% if form.non_field_errors %}
+  <div class="field-errors">
+    <b>Errors:</b>
+    {{ field.non_field_errors }}
+  </div>
+  {% endif %}
+
+  <form method="POST" style="margin: auto;" class="auth-form">
+    {% csrf_token %}
+    {% for field in form %}
+    <div>
+      {{ field.label_tag }} {{ field }}
+      {% if field.errors %}
+      <div class="field-errors">
+        <b>Errors:</b>
+        {{ field.errors }}
+      </div>
+      {% endif %}
+      {% if field.help_text %}
+      <p class="help">
+        {{ field.help_text|safe }}
+      </p>
+      {% endif %}
+    </div>
+    {% endfor %}
+    <input class="button" type="submit" value="Submit">
+  </form>
+</div>
+
+<div>
+  <h3>
+    <a href="{% url 'login' %}">
+      > Go to login
+    </a>
+  </h3>
+</div>
+{% endblock %}

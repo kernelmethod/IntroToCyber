@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% load social_extras %}
+
+{% block title %}
+Sundyl - Support
+{% endblock %}
+
+{% block content %}
+<h2>Talk to support</h2>
+
+<p>
+  Talk to our very helpful support staff in the chat box below!
+</p>
+
+<div class="chatbox">
+  {% for message in messages %}
+  {% if message.from_user.id == user.id %}
+  <div class="chatbox-message sent">
+  {% else %}
+  <div class="chatbox-message received">
+  {% endif %}
+    <div>
+      <span class="message-header">
+        {% profile_short message.from_user.profile %}
+        <div class="message-timestamp">
+          {{ message.timestamp }}
+        </div>
+      </span>
+    </div>
+    {{ message.content }}
+  </div>
+  {% endfor %}
+</div>
+
+<form method="POST">
+  {% csrf_token %}
+  {{ form.as_p }}
+  <input type="submit" value="Submit" class="button button-black">
+</form>
+{% endblock %}

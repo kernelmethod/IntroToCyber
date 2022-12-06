@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+
+{% block title %}
+Sundyl - Search
+{% endblock %}
+
+{% block content %}
+<p>
+  Search for other users' publicly-uploaded content here. 
+</p>
+
+<p>
+  <i>Example:</i> search "kirby_elledge" to find all images that Kirby has uploaded
+</p>
+
+<form method="GET">
+  {% for field in form %}
+  <div>
+    {{ field.label_tag }} {{ field }}
+    {% if field.errors %}
+    <div class="field-errors">
+      <b>Errors:</b>
+      {{ field.errors }}
+    </div>
+    {% endif %}
+    {% if field.help_text %}
+    <p class="help">
+      {{ field.help_text|safe }}
+    </p>
+    {% endif %}
+  </div>
+  {% endfor %}
+  <div class="text-center">
+    <input type="submit" value="Search">
+  </div>
+</form>
+
+<div class="search-results">
+  {% if results is None %}
+  <div class="text-center">
+    <h3>Enter a search term to start looking for user uploads</h3>
+  </div>
+  {% elif results|length == 0 %}
+  <div class="text-center">
+    <h3>No results found!</h3>
+  </div>
+  {% else %}
+  <div class="search-results-container">
+  {% for result in results %}
+    <div class="search-item">
+      <span>
+        <b>Uploaded by:</b>
+        <a href="{% url 'profile' result.user.id %}">
+          {{ result.user.username }}
+        </a>
+      </span>
+      <span>
+        <b>Filename:</b>
+        <a href="{{ result.upload.url }}">
+          {{ result.upload }}
+        </a>
+      </span>
+    </div>
+  {% endfor %}
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

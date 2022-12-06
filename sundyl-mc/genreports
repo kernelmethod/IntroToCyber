@@ -1,0 +1,2 @@
+# Run file report every minute
+* *    * * *   minio    /usr/local/bin/file_report.sh > /report/report.txt

@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1>Welcome to Sundyl</h1>
+
+<p>
+  We are a community of sundial-lovers who refuse to submit to the tyranny of
+  clocks.
+</p>
+
+<h2>
+  If they were good enough for the Greeks and the Romans, they're good enough
+  for us
+</h2>
+
+{% load static %}
+<img src="{% static 'plato.webp' %}" type="image/webp">
+
+<p>
+  Plato never wore a wristwatch. Would you say that you're better than Plato?
+</p>
+
+<p>
+  Checkmate, clock enthusiasts.
+</p>
+
+<div class="text-center">
+  <h1>RETVRN TO TRADITION. RETVRN TO SUNDYL</h1>
+</div>
+
+{% endblock %}

@@ -1,0 +1,24 @@
+{% extends "upload.html" %}
+
+{% block content %}
+<h2>Upload succeeded!</h2>
+
+<p>
+  You can now access and share your file at the following URL:
+</p>
+
+<p>
+  <a href="{{ upload.upload.url }}">
+    {{ upload.upload.url }}
+  </a>
+</p>
+
+{% if not upload.public %}
+<p>
+  <b>CAREFUL!!!</b> This file will not be publicly listed, but other users can still
+  see it if you send it to them. Make sure not to share this URL publicly, especially
+  if it contains sensitive data.
+</p>
+{% endif %}
+
+{% endblock %}

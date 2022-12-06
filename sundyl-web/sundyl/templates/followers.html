@@ -1,0 +1,36 @@
+{% extends 'profile.html' %}
+{% load social_extras %}
+
+{% block profile_content %}
+<p>
+  <a href="{% url 'profile' profile.user.id %}">
+    &lt; Return to user profile
+  </a>
+</p>
+
+{% if followers|length == 0 %}
+{# Nobody is following this user #}
+
+<div class="text-center">
+  <p>This user currently does not have any followers</p>
+</div>
+
+{% else %}
+{# Show all users who are following this profile #}
+
+<p>
+  These people are currently following this user:
+</p>
+
+<ul class="follower-list">
+  {% for follower_relationship in followers %}
+
+  {% with follower=follower_relationship.source_user %}
+  <li>{% profile_short follower %}</li>
+  {% endwith %}
+</ul>
+
+{% endfor %}
+{% endif %}
+
+{% endblock %}
