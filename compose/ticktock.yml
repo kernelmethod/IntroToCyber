@@ -91,6 +91,21 @@ services:
     volumes:
       - ./ticktock/ticktock-minio-setup:/setup/:ro
 
+  # BIND DNS server for TickTock domains
+  dns:
+    image: '${DOCKER_REPO}/ticktock-dns:latest'
+    build: './ticktock/ticktock-dns'
+    hostname: 'ns.ticktock.lab'
+    networks:
+      - 'ticktocknet'
+    environment:
+      - IPV4_ADDR=${IPV4_ADDR:-127.0.0.1}
+    env_file:
+      - 'config/ticktock/bind.env'
+    ports:
+      - '53:53'
+      - '53:53/udp'
+
 volumes:
   dbstore:
   s3store:

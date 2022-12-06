@@ -1,0 +1,23 @@
+;
+; BIND data file for ticktock.lab
+;
+$TTL    3h
+@       IN      SOA     ns1.ticktock.lab. admin.ticktock.lab. (
+                          1        ; Serial
+                          3h       ; Refresh after 3 hours
+                          1h       ; Retry after 1 hour
+                          1w       ; Expire after 1 week
+                          1h )     ; Negative caching TTL of 1 day
+;
+@       IN      NS      ns1.ticktock.lab.
+@       IN      NS      ns2.ticktock.lab.
+
+
+ticktock.lab.           IN      A       IPV4_ADDR
+ns1                     IN      A       IPV4_ADDR
+ns2                     IN      A       IPV4_ADDR
+www                     IN      CNAME   ticktock.lab.
+s3                      IN      A       IPV4_ADDR
+admin                   IN      A       IPV4_ADDR
+gallery                 IN      A       IPV4_ADDR
+vuln                    IN      A       IPV4_ADDR
