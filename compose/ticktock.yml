@@ -18,7 +18,7 @@ services:
   # TickTock webserver
   webserver:
     image: '${DOCKER_REPO}/ticktock-web:latest'
-    build: ./ticktock-web
+    build: ./ticktock/ticktock-web
     restart: unless-stopped
     entrypoint: ['sh', '/scripts/run.sh']
     hostname: 'www.ticktock.lab'
@@ -50,7 +50,7 @@ services:
     networks:
       - ticktocknet
     build:
-      context: ./ticktock-proxy
+      context: ./ticktock/ticktock-proxy
     restart: always
     depends_on:
       - minio
@@ -89,7 +89,7 @@ services:
     entrypoint: /setup/setup.sh
     working_dir: /setup
     volumes:
-      - ./ticktock-minio-setup:/setup/:ro
+      - ./ticktock/ticktock-minio-setup:/setup/:ro
 
 volumes:
   dbstore:

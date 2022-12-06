@@ -9,7 +9,7 @@ services:
     image: '${DOCKER_REPO}/ticktock-gallery-rclone:latest'
     networks:
       - ticktocknet
-    build: ./ticktock-gallery-rclone
+    build: ./ticktock/ticktock-gallery-rclone
     env_file:
       - 'config/ticktock/admin_pass.env'
     depends_on:
@@ -41,7 +41,7 @@ services:
     hostname: 'gallery.ticktock.lab'
     networks:
       - ticktocknet
-    build: ./ticktock-gallery
+    build: ./ticktock/ticktock-gallery
     env_file:
       - 'config/ticktock/admin_pass.env'
     depends_on:

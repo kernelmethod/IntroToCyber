@@ -80,7 +80,7 @@ services:
     secrets:
       - FLAG_WILDCARD_SOURCE_CONTROL
     build:
-      context: ./sundyl-fossil
+      context: ./sundyl/sundyl-fossil
     hostname: 'bugs.${SUNDYL_BASE_DOMAIN}'
     ports:
       - 5000:8080
@@ -92,7 +92,7 @@ services:
       - FLAG_WILDCARD_PORT_ENUMERATION
       - FLAG_WILDCARD_SUBDOMAIN
     build:
-      context: ./sundyl-proxy
+      context: ./sundyl/sundyl-proxy
     environment:
       <<: *lab-common-env
       <<: *bucket-common-env
@@ -115,7 +115,7 @@ services:
   dns:
     <<: *lab-networks
     image: '${DOCKER_REPO}/sundyl-dns:latest'
-    build: ./sundyl-dns
+    build: ./sundyl/sundyl-dns
     hostname: 'ns1.${SUNDYL_BASE_DOMAIN}'
     environment:
       IPV4_ADDR: '${IPV4_ADDR:-127.0.0.1}'
@@ -146,7 +146,7 @@ services:
       GUNICORN_RELOAD: 0
       POSTGRES_USER: 'admin'
       POSTGRES_PASSWORD_FILE: /run/secrets/POSTGRES_WEB_PASSWORD
-    build: ./sundyl-web
+    build: ./sundyl/sundyl-web
     hostname: 'www.${SUNDYL_BASE_DOMAIN}'
     restart: always
     deploy:
@@ -157,7 +157,7 @@ services:
   postgres:
     image: '${DOCKER_REPO}/sundyl-postgres:latest'
     hostname: 'db.${SUNDYL_BASE_DOMAIN}'
-    build: ./sundyl-database
+    build: ./sundyl/sundyl-database
     secrets:
       - POSTGRES_PASSWORD
       - POSTGRES_WEB_PASSWORD
@@ -181,7 +181,7 @@ services:
     <<: *lab-networks
     <<: *minio-config
     image: '${DOCKER_REPO}/sundyl-minio:latest'
-    build: ./sundyl-minio
+    build: ./sundyl/sundyl-minio
     hostname: 'cdn.${SUNDYL_BASE_DOMAIN}'
     ports:
       - '9000:9000'
@@ -194,7 +194,7 @@ services:
     <<: *lab-networks
     hostname: 'reports.${SUNDYL_BASE_DOMAIN}'
     image: '${DOCKER_REPO}/sundyl-mc:latest'
-    build: './sundyl-mc'
+    build: './sundyl/sundyl-mc'
     secrets:
       - MINIO_ROOT_PASSWORD
       - FLAG_RCE
@@ -213,7 +213,7 @@ services:
     hostname: 'support.${SUNDYL_BASE_DOMAIN}'
     image: '${DOCKER_REPO}/sundyl-support:latest'
     build:
-      context: ./sundyl-support
+      context: ./sundyl/sundyl-support
     secrets:
       - STAFF_PASSWORD
 
