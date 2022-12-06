@@ -1,0 +1,80 @@
+services:
+
+  proxy:
+    # Use the gallery proxy configuration
+    environment:
+      NGINX_ADDTL_CONFD: "gallery.conf,vuln.conf"
+
+  rclone:
+    image: '${DOCKER_REPO}/ticktock-gallery-rclone:latest'
+    networks:
+      - "ticktocknet"
+    build:
+      context: ./gallery
+      dockerfile: rclone.Dockerfile
+    env_file:
+      - "flags/admin_pass.env"
+    depends_on:
+      - minio
+    volumes:
+      - type: bind
+        source: /tmp/ticktock-gallery
+        target: /s3
+        bind:
+          propagation: rshared
+    restart: on-failure
+    deploy:
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+
+    # Required to allow rclone FUSE mounts inside of the container.
+    # Note that this is generally quite insecure.
+    devices:
+      - /dev/fuse:/dev/fuse:rwm
+    cap_add:
+      - SYS_ADMIN
+    security_opt:
+      - apparmor:unconfined
+
+  # Apache httpd webserver running the TickTock gallery
+  gallery:
+    image: ticktock/gallery
+    hostname: "gallery.ticktock.lab"
+    networks:
+      - "ticktocknet"
+    build:
+      context: ./gallery
+    env_file:
+      - "flags/admin_pass.env"
+    depends_on:
+      - rclone
+      - minio
+    volumes:
+      - ./gallery/sites-enabled:/etc/apache2/sites-enabled:ro
+      - ./gallery/public-html:/var/www/html:ro
+      - type: bind
+        source: /tmp/ticktock-gallery
+        target: /s3
+        bind:
+          propagation: rslave
+    deploy:
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+
+  # Vulnerable httpd server
+  httpd-vuln:
+    image: ticktock/httpd:vuln
+    hostname: "vuln.ticktock.lab"
+    networks:
+      - "ticktockdmz"
+    env_file:
+      - "flags/rce_testing.env"
+    ports:
+      - 10000:80
+    build:
+      context: ./rce_testing
+
+networks:
+  ticktockdmz:

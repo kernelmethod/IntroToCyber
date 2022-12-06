@@ -1,0 +1,99 @@
+# Compose configuration file for Lab 2
+
+version: '3'
+services:
+  database:
+    image: postgres:14
+    hostname: 'db.ticktock.lab'
+    restart: always
+    networks:
+      - ticktocknet
+    env_file:
+      - 'config/ticktock/database.env'
+    ports:
+      - '5432:5432'
+    volumes:
+      - dbstore:/var/lib/postgresql/data
+
+  # TickTock webserver
+  webserver:
+    image: '${DOCKER_REPO}/ticktock-web:latest'
+    build: ./ticktock-web
+    restart: unless-stopped
+    entrypoint: ['sh', '/scripts/run.sh']
+    hostname: 'www.ticktock.lab'
+    networks:
+      - ticktocknet
+    ports:
+      - '5000:5000'
+    environment:
+      DB_HOST: 'db.ticktock.lab'
+      SECRET_KEY: 'ce330a3f5aeca29730768e9db4f6a045c772b4e5432d3608f65637a9d03b5681'
+      GUNICORN_RELOAD: '${GUNICORN_RELOAD:-1}'
+    env_file:
+      - 'config/ticktock/database.env'
+      - 'config/ticktock/admin_pass.env'
+      - 'config/ticktock/buckets.env'
+      - 'config/ticktock/recon_flags.env'
+    depends_on:
+      - database
+    restart: on-failure
+    deploy:
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+
+  # Nginx proxy server
+  proxy:
+    image: '${DOCKER_REPO}/ticktock-proxy:latest'
+    hostname: 'proxy.ticktock.lab'
+    networks:
+      - ticktocknet
+    build:
+      context: ./ticktock-proxy
+    restart: always
+    depends_on:
+      - minio
+      - webserver
+    ports:
+      - 80:80
+
+  # MinIO - S3 object store
+  minio:
+    image: minio/minio
+    hostname: 's3.ticktock.lab'
+    networks:
+      - ticktocknet
+    ports:
+      - '9000:9000'
+      - '9001:9001'
+    volumes:
+      - s3store:/data
+    env_file:
+      - 'config/ticktock/admin_pass.env'
+    command: server /data --console-address ':9001'
+
+  # Minio client (used to perform initial configuration of MinIO)
+  createbuckets:
+    image: minio/mc
+    networks:
+      - ticktocknet
+    environment:
+      MINIO_HOST: 'minio'
+    env_file:
+      - 'config/ticktock/admin_pass.env'
+      - 'config/ticktock/buckets.env'
+    depends_on:
+      - minio
+    restart: on-failure
+    entrypoint: /setup/setup.sh
+    working_dir: /setup
+    volumes:
+      - ./ticktock-minio-setup:/setup/:ro
+
+volumes:
+  dbstore:
+  s3store:
+
+networks:
+  ticktocknet:
