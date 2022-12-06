@@ -1,0 +1,55 @@
+:root {
+    --font-size: 25px;
+}
+
+html {
+    font-size: var(--font-size);
+    background-color: #f7c6d1;
+}
+
+body {
+    max-width: 80%;
+    margin: auto;
+    margin-bottom: 2rem;
+}
+
+h1 {
+    font-size: calc(1.75 * var(--font-size));
+    font-weight: bold;
+}
+
+h2 {
+    font-size: calc(1.50 * var(--font-size));
+}
+
+h3 {
+    font-size: calc(1.30 * var(--font-size));
+}
+
+header {
+    margin-top: 2rem;
+}
+
+div.gallery-img {
+    display: flex;
+    justify-content: center;
+}
+
+.gallery-img {
+    width: 100%;
+    max-height: 512px;
+    text-align: center;
+    margin: auto;
+    object-fit: cover;
+    object-position: 0 25%;
+    overflow-y: scroll;
+}
+
+.nftcard {
+    padding: 1em;
+}
+
+figure figcaption {
+    font-size: calc(1.25 * var(--font-size));
+    padding: 1em;
+}
