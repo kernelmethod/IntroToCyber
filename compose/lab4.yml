@@ -1,0 +1,5 @@
+version: '3'
+services:
+  passgen:
+    image: '${DOCKER_REPO}/lab4-passgen:latest'
+    build: './lab4'
