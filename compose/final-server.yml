@@ -1,0 +1,9 @@
+version: '3'
+services:
+  cryptoapi:
+    image: '${DOCKER_REPO}/final-cryptoapi:latest'
+    environment:
+      CRYPTO_IKM: 'lpWaDLe0oFpY/I7KQYjhlhOzn++Io0V4'
+    build: ./final/crypto
+    ports:
+      - '1337:8000'
