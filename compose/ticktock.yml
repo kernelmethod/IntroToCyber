@@ -20,7 +20,6 @@ services:
     image: '${DOCKER_REPO}/ticktock-web:latest'
     build: ./ticktock/ticktock-web
     restart: unless-stopped
-    entrypoint: ['sh', '/scripts/run.sh']
     hostname: 'www.ticktock.lab'
     networks:
       - ticktocknet

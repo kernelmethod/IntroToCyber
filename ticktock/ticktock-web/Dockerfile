@@ -28,6 +28,11 @@ RUN apk add --no-cache --virtual build-deps build-base musl-dev && \
         pip install --no-cache-dir -r /tmp/requirements.txt && \
         apk del build-deps
 
+# Create directory for Python cache files
+ENV PYTHONPYCACHEPREFIX=/var/cache/pycache
+RUN mkdir -p "$PYTHONPYCACHEPREFIX" && \
+    chown -R $APP_USER_UID:$APP_USER_UID "$PYTHONPYCACHEPREFIX"
+
 # Install configuration for gunicorn
 RUN mkdir -p /etc/gunicorn
 COPY conf/gunicorn.conf.py /etc/gunicorn/gunicorn.conf.py
@@ -38,7 +43,8 @@ USER "${APP_USER}"
 WORKDIR "${APP_DIR}"
 
 # Add setup script
-COPY --chown="${APP_USER}:${APP_USER}" scripts/run.sh /scripts/run.sh
+COPY --chown="${APP_USER}:${APP_USER}" docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+RUN chmod a+rx,go-w /usr/local/bin/docker-entrypoint.sh
 
 # Copy application code and install dependencies
 COPY --chown="${APP_USER}:${APP_USER}" . "${APP_DIR}/"
@@ -48,4 +54,4 @@ VOLUME /etc/gunicorn
 VOLUME ./ticktock
 VOLUME /scripts
 
-CMD [ "python", "-m", "ticktock", "--debug", "server" ]
+CMD [ "docker-entrypoint.sh" ]
