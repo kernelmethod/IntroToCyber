@@ -2,7 +2,7 @@
 	auto_https off
 }
 
-*:80 {
+:80 {
 	log
 
 	handle_path /s3/* {
