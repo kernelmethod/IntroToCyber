@@ -13,12 +13,6 @@
 	auto_https off
 }
 
-# Apache Airflow
-airflow.{$BASE_DOMAIN}:80 {
-	log
-	reverse_proxy airflow.{$BASE_DOMAIN}:8080
-}
-
 (handle_server_errors) {
 	handle_errors {
 		@502 expression `{err.status_code} == 502`
