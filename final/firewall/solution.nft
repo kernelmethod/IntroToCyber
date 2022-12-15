@@ -7,21 +7,24 @@ delete table inet firewall
 # Firewall rules. You should define your custom rules here!
 table inet firewall {
     chain input {
-        type filter hook input priority filter; policy drop;
+        type filter hook input priority 0; policy drop;
 
         # **IMPORTANT:** keep the following rules in this chain so that your VM
         # stays compatible with VCR's environment!
         tcp dport {22, 3389} counter accept
-        udp dport 67 counter accept
+        udp dport 68 counter accept
         ip protocol icmp counter accept
         ip saddr 172.17.0.0/16 counter accept
 
         # Allow traffic on loopback
-        iif lo accept
-        ip saddr 127.0.0.0/8 accept
+        iif lo counter accept
+        ip saddr 127.0.0.0/8 counter accept
 
         # Allow inbound HTTP(S)
         tcp dport {80, 443} counter accept
+
+        # Allow inbound traffic to Postgres
+        ip saddr 10.0.0.0/8 tcp dport 5432 accept
 
         # Allow responses to connections
         ct state {related, established} counter accept
@@ -30,35 +33,35 @@ table inet firewall {
         udp sport 53 counter accept
 
         # Log dropped packets
-        limit 5/second log prefix "input.drop: "
+        limit rate 5/second log prefix "input.drop: "
     }
 
     chain output {
-        type filter hook output priority filter; policy drop;
+        type filter hook output priority 0; policy drop;
 
         # **IMPORTANT:** keep the following rules in this chain so that your VM
         # stays compatible with VCR's environment!
         tcp sport {22, 3389} counter accept
-        udp sport 67 counter accept
+        udp sport 68 counter accept
         ip protocol icmp counter accept
         ip daddr 172.17.0.0/16 counter accept
 
         # Allow traffic on loopback
-        oif lo accept
-        ip daddr 127.0.0.0/8 accept
+        oif lo counter accept
+        ip daddr 127.0.0.0/8 counter accept
 
         # Allow inbound HTTP(S)
         tcp sport {80, 443} counter accept
 
-        # Allow outbound traffic to Postgres
-        tcp dport 5432 counter accept
+        # Allow Postgres to respond to connections
+        ct state {related, established} accept
 
         # Allow outbound DNS and HTTP(S)
         tcp dport {80, 443} counter accept
         udp dport 53 counter accept
 
         # Log dropped packets
-        limit 5/second log prefix "output.drop: "
+        limit rate 5/second log prefix "output.drop: "
     }
 }
 

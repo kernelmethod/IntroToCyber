@@ -7,7 +7,7 @@ delete table inet firewall
 # Firewall rules. You should define your custom rules here!
 table inet firewall {
     chain input {
-        type filter hook input priority filter; policy drop;
+        type filter hook input priority 0; policy drop;
 
         # **IMPORTANT:** keep the following rules in this chain so that your VM
         # stays compatible with VCR's environment!
@@ -20,7 +20,7 @@ table inet firewall {
     }
 
     chain output {
-        type filter hook output priority filter; policy drop;
+        type filter hook output priority 0; policy drop;
 
         # **IMPORTANT:** keep the following rules in this chain so that your VM
         # stays compatible with VCR's environment!
