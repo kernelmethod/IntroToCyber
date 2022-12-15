@@ -75,7 +75,8 @@ services:
 
   # Minio client (used to perform initial configuration of MinIO)
   createbuckets:
-    image: minio/mc
+    image: '${DOCKER_REPO}/ticktock-createbuckets:latest'
+    build: ./ticktock/ticktock-minio-setup/
     networks:
       - ticktocknet
     environment:
@@ -86,10 +87,6 @@ services:
     depends_on:
       - minio
     restart: on-failure
-    entrypoint: /setup/setup.sh
-    working_dir: /setup
-    volumes:
-      - ./ticktock/ticktock-minio-setup:/setup/:ro
 
   # BIND DNS server for TickTock domains
   dns:
