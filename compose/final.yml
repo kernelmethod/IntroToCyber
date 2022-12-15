@@ -48,6 +48,7 @@ services:
     depends_on:
       - minio
       - webserver
+    restart: always
     ports:
       - '80:80'
     volumes:
