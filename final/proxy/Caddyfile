@@ -1,0 +1,15 @@
+{
+	auto_https off
+}
+
+*:80 {
+	log
+
+	handle_path /s3/* {
+		reverse_proxy 172.25.1.4:9000
+	}
+
+	handle {
+		reverse_proxy 172.25.1.3:5000
+	}
+}
