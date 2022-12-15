@@ -1,0 +1,63 @@
+#!/usr/sbin/nft -f
+
+# Flush the old rules from the firewall table
+table inet firewall
+delete table inet firewall
+
+# Firewall rules. You should define your custom rules here!
+table inet firewall {
+    chain input {
+        type filter hook input priority filter; policy drop;
+
+        # **IMPORTANT:** keep the following rules in this chain so that your VM
+        # stays compatible with VCR's environment!
+        tcp dport {22, 3389} counter accept
+        udp dport 67 counter accept
+        ip protocol icmp counter accept
+
+        # Allow traffic on loopback
+        iif lo accept
+        ip saddr 127.0.0.0/8 accept
+
+        # Allow inbound HTTP(S)
+        tcp dport {80, 443} counter accept
+
+        # Allow responses to connections
+        ct state {related, established} counter accept
+
+        # Allow inbound DNS
+        udp sport 53 counter accept
+
+        # Log dropped packets
+        limit 5/second log prefix "input.drop: "
+    }
+
+    chain output {
+        type filter hook output priority filter; policy drop;
+
+        # **IMPORTANT:** keep the following rules in this chain so that your VM
+        # stays compatible with VCR's environment!
+        tcp sport {22, 3389} counter accept
+        udp sport 67 counter accept
+        ip protocol icmp counter accept
+
+        # Allow traffic on loopback
+        oif lo accept
+        ip daddr 127.0.0.0/8 accept
+
+        # Allow inbound HTTP(S)
+        tcp sport {80, 443} counter accept
+
+        # Allow outbound traffic to Postgres
+        tcp dport 5432 counter accept
+
+        # Allow outbound DNS and HTTP(S)
+        tcp dport {80, 443} counter accept
+        udp dport 53 counter accept
+
+        # Log dropped packets
+        limit 5/second log prefix "output.drop: "
+    }
+}
+
+

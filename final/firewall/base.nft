@@ -1,0 +1,34 @@
+#!/usr/sbin/nft -f
+
+# Flush the old rules from the firewall table
+table inet firewall
+delete table inet firewall
+
+# Firewall rules. You should define your custom rules here!
+table inet firewall {
+    chain input {
+        type filter hook input priority filter; policy drop;
+
+        # **IMPORTANT:** keep the following rules in this chain so that your VM
+        # stays compatible with VCR's environment!
+        tcp dport {22, 3389} counter accept
+        udp dport 68 counter accept
+        ip protocol icmp counter accept
+
+        # TODO: your rules here!
+    }
+
+    chain output {
+        type filter hook output priority filter; policy drop;
+
+        # **IMPORTANT:** keep the following rules in this chain so that your VM
+        # stays compatible with VCR's environment!
+        tcp sport {22, 3389} counter accept
+        udp sport 68 counter accept
+        ip protocol icmp counter accept
+
+        # TODO: your rules here!
+    }
+}
+
+
