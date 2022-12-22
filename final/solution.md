@@ -452,7 +452,7 @@ commands used to generated each of the `attacker.log.*` files:
 
 ```bash
 # attacker.log.1
-nmap -sT -sC -T4 -v desktop.example.com
+nmap -p 80 -sT -sC -T4 -v desktop.example.com
 
 # attacker.log.2
 sqlmap -u 'http://desktop.example.com/api/search?query=' \
