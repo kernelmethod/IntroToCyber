@@ -1,0 +1,7 @@
+version: '3'
+services:
+  lab:
+    image: '${DOCKER_REPO}/lab1:latest'
+    build: ./lab1
+    ports:
+      - '2222:2222'
