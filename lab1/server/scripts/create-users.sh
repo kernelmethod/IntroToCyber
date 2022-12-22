@@ -22,6 +22,8 @@ while read line; do
         --groups ssh-access,lab-users \
         --user-group \
         --shell /bin/bash
+
+    chown root "/home/$username"
 done < "$PASSWORDS"
 
 rm -f "$cryptfile"

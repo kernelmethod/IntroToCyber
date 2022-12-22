@@ -3,4 +3,4 @@
 set -eux
 
 mkdir -p /run/sshd
-exec /usr/sbin/sshd -D
+exec /usr/sbin/sshd -e -D

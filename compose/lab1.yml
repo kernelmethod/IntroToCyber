@@ -1,7 +1,17 @@
 version: '3'
 services:
   lab:
-    image: '${DOCKER_REPO}/lab1:latest'
-    build: ./lab1
+    image: '${DOCKER_REPO}/lab1-server:latest'
+    hostname: 'server.lab'
+    build: ./lab1/server
     ports:
-      - '2222:2222'
+      - '2222:22'
+
+  # This container is not strictly necessary. It's just useful for testing
+  # that the Lab 1 server is working correctly.
+  lab-client:
+    image: '${DOCKER_REPO}/lab1-client:latest'
+    build: ./lab1/client
+
+networks:
+  lab1-net:

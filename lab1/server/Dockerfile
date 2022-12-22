@@ -16,7 +16,7 @@ RUN echo 'umask 0027' >> /etc/bash.bashrc && \
 # Give SSH access to the ssh-access group
 RUN groupadd -g 5000 ssh-access && \
     groupadd -g 5001 lab-users
-COPY files/sshd_config /etc/ssh/sshd_config.d/
+COPY files/sshd_config.conf /etc/ssh/sshd_config.d/
 
 COPY scripts /usr/local/bin
 RUN find /usr/local/bin -type f -exec chmod u+rx,go-w '{}' \;
