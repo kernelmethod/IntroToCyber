@@ -26,7 +26,6 @@ table inet firewall {
 
         # Allow inbound HTTP(S)
         tcp dport {80, 443} counter accept
-        tcp dport 8000 counter accept
 
         # Allow inbound traffic to Postgres from 10.0.0.0/8.
         ip saddr 10.0.0.0/8 tcp dport 5432 accept
