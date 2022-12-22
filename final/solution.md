@@ -167,10 +167,10 @@ all to begin with. It turns out that this scheme has three advantages:
   lot of files to encrypt before repeating nonces.
 
 And in fact, assuming that filenames *never* repeat, the `encrypt` function is
-perfectly secure, since you're always encrypting files with the same key-nonce
-pair. Of course, all of these benefits become completely worthless as soon as
-that assumption gets thrown out the window. And in general there are better ways
-of doing this than messing around with the nonce, e.g. generating a unique
+perfectly secure, since you never encrypt files with the same key-nonce pair.
+Of course, all of these benefits become completely worthless as soon as that
+assumption gets thrown out the window. And in general there are better ways of
+doing this than messing around with the nonce, e.g. generating a unique
 encryption key for each file.
 
 If you like these kinds of cryptography problems, you should check out the
