@@ -424,11 +424,11 @@ apply to these directories are the following:
     └── [drwxr-x--- alice alice-friends]  public
 ```
 
-Depending on your point of view, there are actually a few different permission
-sets that could be placed on `/srv/alice`, e.g. `r-xr-xr-x` or `r-x------`.
-Files in each of the three subdirectories should inherit the same permissions as
-those subdirectories, with (possibly -- again, this was not specified by the
-problem) execute permissions removed.
+Depending on your point of view, it may or may not be appropriate to have write
+permissions on `/srv/alice`, so `r-xr-xr-x` would also be an acceptable
+permission set for that directory. Files in each of the three subdirectories
+should inherit the same permissions as the directories, with (possibly -- again,
+this was not specified by the problem) execute permissions removed.
 
 The only real catch here is that whenever somebody should be able to read a
 directory, you have both the read and execute permissions set. The read `r`
