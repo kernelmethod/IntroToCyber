@@ -16,7 +16,7 @@ RUN echo 'umask 0027' >> /etc/bash.bashrc && \
 # Give SSH access to the ssh-access group
 RUN groupadd -g 5000 ssh-access && \
     groupadd -g 5001 lab-users
-COPY sshd_config /etc/ssh/sshd_config
+COPY files/sshd_config /etc/ssh/sshd_config.d/
 
 COPY scripts /usr/local/bin
 RUN find /usr/local/bin -type f -exec chmod u+rx,go-w '{}' \;
@@ -24,9 +24,9 @@ RUN find /usr/local/bin -type f -exec chmod u+rx,go-w '{}' \;
 # Make some changes to /etc/skel before creating users
 RUN chmod -R o-rwx /etc/skel
 
-COPY --chown=root:root passwords /root/passwords
-RUN chmod -R go-rwx /root/passwords && \
-    create-users.sh /root/passwords
+COPY --chown=root:root passwords.txt /root/passwords.txt
+RUN chmod -R go-rwx /root/passwords.txt && \
+    create-users.sh /root/passwords.txt /root/passwords
 
 # Install wordlists
 RUN mkdir -p /usr/local/share/wordlists
