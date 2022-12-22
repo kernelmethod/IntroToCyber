@@ -16,21 +16,24 @@ table inet firewall {
         ip protocol icmp counter accept
         ip saddr 172.17.0.0/16 counter accept
 
-        # Allow traffic on loopback
+        # Allow traffic on loopback.
+        #
+        # Once again, it's perfectly fine for our purposes to implement this as
+        #
+        #     ip saddr 127.0.0.0/8 counter accept
+        #
         iif lo counter accept
-        ip saddr 127.0.0.0/8 counter accept
 
         # Allow inbound HTTP(S)
         tcp dport {80, 443} counter accept
+        tcp dport 8000 counter accept
 
-        # Allow inbound traffic to Postgres
+        # Allow inbound traffic to Postgres from 10.0.0.0/8.
         ip saddr 10.0.0.0/8 tcp dport 5432 accept
 
-        # Allow responses to connections
+        # Allow responses to connections. This enables responses to outbound
+        # HTTP(S) and DNS traffic.
         ct state {related, established} counter accept
-
-        # Allow inbound DNS
-        udp sport 53 counter accept
 
         # Log dropped packets
         limit rate 5/second log prefix "input.drop: "
@@ -46,17 +49,21 @@ table inet firewall {
         ip protocol icmp counter accept
         ip daddr 172.17.0.0/16 counter accept
 
-        # Allow traffic on loopback
+        # Allow traffic on loopback. This can also be implemented with
+        #
+        #     ip daddr 127.0.0.0/8 counter accept
+        #
         oif lo counter accept
-        ip daddr 127.0.0.0/8 counter accept
 
-        # Allow inbound HTTP(S)
-        tcp sport {80, 443} counter accept
+        # Allow the HTTP(S) server and Postgres to respond to connections. You
+        # could also have some rules like the following:
+        #
+        #   tcp sport {80, 443} accept
+        #   ip daddr 10.0.0.0/8 tcp dport 5432 accept
+        #
+        ct state {related, established} counter accept
 
-        # Allow Postgres to respond to connections
-        ct state {related, established} accept
-
-        # Allow outbound DNS and HTTP(S)
+        # Allow outbound HTTP(S) and DNS
         tcp dport {80, 443} counter accept
         udp dport 53 counter accept
 
