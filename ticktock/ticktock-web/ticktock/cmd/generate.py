@@ -6,7 +6,7 @@ import markovify
 import typing as _t
 from string import ascii_letters
 from ticktock import config, utils
-from ticktock.app import db
+from ticktock.app import app, db
 from ticktock.logging import getLogger
 from ticktock.model import User, Post
 
@@ -41,12 +41,14 @@ def generate_user(args, password_len: int = 12):
     if args.uid is not None:
         kwargs["uid"] = args.uid
 
-    user = User(**kwargs)
-    db.session.add(user)
-    db.session.commit()
+    with app.app_context():
+        user = User(**kwargs)
+        db.session.add(user)
+        db.session.commit()
 
     # Get the ID of the user who was added to the database
-    user = User.query.filter_by(username=kwargs["username"]).first()
+    with app.app_context():
+        user = User.query.filter_by(username=kwargs["username"]).first()
     logger.info("Added user = %s", repr(user))
 
     # Add a profile picture for the user
@@ -88,13 +90,14 @@ def generate_post(args):
     else:
         content = [model.make_short_sentence(280) for _ in range(args.number)]
 
-    for c in content:
-        post_args["posted"] = random.random() * (ts - te) + ts
-        post_args["content"] = c
-        post = Post(**post_args)
-        db.session.add(post)
+    with app.app_context():
+        for c in content:
+            post_args["posted"] = random.random() * (ts - te) + ts
+            post_args["content"] = c
+            post = Post(**post_args)
+            db.session.add(post)
 
-    db.session.commit()
+        db.session.commit()
 
 
 def add_subcommands(subparsers):

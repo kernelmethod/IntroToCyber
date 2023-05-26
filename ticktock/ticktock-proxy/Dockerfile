@@ -1,4 +1,4 @@
-FROM nginx:1.23-alpine
+FROM nginx:1.25-alpine
 
 # Remove the default enabled site configurations
 RUN rm /etc/nginx/conf.d/*.conf

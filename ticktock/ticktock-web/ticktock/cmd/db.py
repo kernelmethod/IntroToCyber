@@ -1,11 +1,13 @@
 # Handlers for database-related subcommands
 
-from ticktock.app import db
+from ticktock.app import app, db
 
 
 def initdb(args):
-    db.create_all()
+    with app.app_context():
+        db.create_all()
 
 
 def destroydb(args):
-    db.drop_all()
+    with app.app_context():
+        db.drop_all()
