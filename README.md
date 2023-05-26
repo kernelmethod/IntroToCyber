@@ -14,6 +14,23 @@ Cybersecurity*, taught by Will Shand.
 
 ## How to use this repository
 
+To get started with using the images in this repository, you should create a
+`.env` file by copying `.env.example` and filling the variables with whatever
+configuration options you'd like to use.
+
+### Building images
+
+You can use `docker compose` to build the images. For example, the following
+command (which should be run from the repository's root) builds the images for
+the TickTock web app:
+
+```bash
+docker compose --project-directory . --file compose/ticktock.yml build
+```
+
+These images will be built under the repository specified by the `DOCKER_REPO`
+variable of your `.env` file.
+
 ## FAQ
 
 ### Who is this repository for?
