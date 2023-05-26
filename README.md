@@ -31,6 +31,16 @@ docker compose --project-directory . --file compose/ticktock.yml build
 These images will be built under the repository specified by the `DOCKER_REPO`
 variable of your `.env` file.
 
+## Related repositories
+
+I have two other repositories for the two programming assignments that students
+received for the course:
+
+- Programming Assignment 1 (Web Fuzzing):
+  [kernelmethod/xfuzz](https://github.com/kernelmethod/xfuzz)
+- Programming Assignment 2 (Cryptography):
+  [kernelmethod/age-notebook](https://github.com/kernelmethod/age-notebook)
+
 ## FAQ
 
 ### Who is this repository for?
