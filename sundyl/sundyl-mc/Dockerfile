@@ -1,4 +1,4 @@
-FROM minio/mc
+FROM minio/mc:RELEASE.2022-12-24T15-21-38Z
 
 WORKDIR /setup
 
