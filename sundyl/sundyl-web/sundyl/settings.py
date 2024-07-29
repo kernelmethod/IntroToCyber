@@ -17,7 +17,8 @@ from pathlib import Path
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 BASE_DOMAIN = os.getenv("BASE_DOMAIN", "sundyl.lab")
-CDN_DOMAIN = f"cdn.{BASE_DOMAIN}"
+# CDN_DOMAIN = f"cdn.{BASE_DOMAIN}"
+CDN_DOMAIN = "minio"
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.1/howto/deployment/checklist/
@@ -101,7 +102,7 @@ else:
             "NAME": "webdata",
             "USER": os.environ["POSTGRES_USER"],
             "PASSWORD": POSTGRES_PASSWORD,
-            "HOST": f"db.{BASE_DOMAIN}",
+            "HOST": "postgres",
             "PORT": "5432",
         }
     }
